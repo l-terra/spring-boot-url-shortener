@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
 
-    @Query("select su from ShortUrl su where su.isPrivate = false order by su.createdAt desc")
+    @Query("select su from ShortUrl su left join fetch su.createdBy where su.isPrivate = false order by su.createdAt desc")
     List<ShortUrl> findPublicShortUrls();
 }
