@@ -1,12 +1,20 @@
 package com.lucasterra.spring_boot_url_shortener.web.controllers;
 
 import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
+import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
 import com.lucasterra.spring_boot_url_shortener.domain.service.ShortUrlService;
+import com.lucasterra.spring_boot_url_shortener.web.dtos.CreateShortUrlForm;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.naming.Binding;
 import java.util.List;
 
 @Controller
@@ -23,6 +31,31 @@ public class HomeController {
         List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
         model.addAttribute("shortUrls", shortUrls);
         model.addAttribute("baseUrl", "http://localhost:8080");
+        model.addAttribute("createShortUrlForm", new CreateShortUrlForm(""));
         return "index";
+    }
+
+    @PostMapping("/short-urls")
+    String createShortUrl(@ModelAttribute("createShortUrlForm") @Valid CreateShortUrlForm form,
+                          BindingResult bindingResult,
+                          RedirectAttributes redirectAttributes,
+                          Model model) {
+        if(bindingResult.hasErrors()) {
+            List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
+            model.addAttribute("shortUrls", shortUrls);
+            model.addAttribute("baseUrl", "http://localhost:8080");
+            return "index";
+        }
+
+        try{
+            CreateShortUrlCmd cmd = new CreateShortUrlCmd(form.originalUrl());
+            var shortUrlDto = shortUrlService.createShortUrl(cmd);
+            redirectAttributes.addFlashAttribute("successMessage", "Short URL created successfully " +
+                    "http://localhost:8080/s/" + shortUrlDto.shortKey());
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create Short URL");
+
+        }
+        return "redirect:/";
     }
 }
