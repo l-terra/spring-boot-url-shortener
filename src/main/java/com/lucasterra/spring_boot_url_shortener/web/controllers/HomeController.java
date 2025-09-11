@@ -1,5 +1,6 @@
 package com.lucasterra.spring_boot_url_shortener.web.controllers;
 
+import com.lucasterra.spring_boot_url_shortener.ApplicationProperties;
 import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
 import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
@@ -21,9 +22,11 @@ import java.util.List;
 public class HomeController {
 
     private final ShortUrlService shortUrlService;
+    private final ApplicationProperties properties;
 
-    public HomeController(ShortUrlService shortUrlService) {
+    public HomeController(ShortUrlService shortUrlService, ApplicationProperties properties) {
         this.shortUrlService = shortUrlService;
+        this.properties = properties;
     }
 
     @GetMapping("/")
@@ -43,7 +46,7 @@ public class HomeController {
         if(bindingResult.hasErrors()) {
             List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
             model.addAttribute("shortUrls", shortUrls);
-            model.addAttribute("baseUrl", "http://localhost:8080");
+            model.addAttribute("baseUrl", properties.baseUrl());
             return "index";
         }
 
@@ -51,9 +54,9 @@ public class HomeController {
             CreateShortUrlCmd cmd = new CreateShortUrlCmd(form.originalUrl());
             var shortUrlDto = shortUrlService.createShortUrl(cmd);
             redirectAttributes.addFlashAttribute("successMessage", "Short URL created successfully " +
-                    "http://localhost:8080/s/" + shortUrlDto.shortKey());
+                    properties.baseUrl() + "/s/" + shortUrlDto.shortKey());
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create Short URL");
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to create short URL");
 
         }
         return "redirect:/";
