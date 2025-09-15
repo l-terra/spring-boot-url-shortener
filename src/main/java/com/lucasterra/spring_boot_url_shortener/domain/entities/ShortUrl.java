@@ -3,7 +3,6 @@ package com.lucasterra.spring_boot_url_shortener.domain.entities;
 import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "short_urls")

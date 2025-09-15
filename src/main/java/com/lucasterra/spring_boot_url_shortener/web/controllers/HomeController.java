@@ -2,6 +2,7 @@ package com.lucasterra.spring_boot_url_shortener.web.controllers;
 
 import com.lucasterra.spring_boot_url_shortener.ApplicationProperties;
 import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
+import com.lucasterra.spring_boot_url_shortener.domain.exceptions.ShortUrlNotFoundException;
 import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
 import com.lucasterra.spring_boot_url_shortener.domain.service.ShortUrlService;
@@ -12,11 +13,13 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.naming.Binding;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 public class HomeController {
@@ -57,8 +60,17 @@ public class HomeController {
                     properties.baseUrl() + "/s/" + shortUrlDto.shortKey());
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to create short URL");
-
         }
         return "redirect:/";
+    }
+
+    @GetMapping("/s/{shortKey}")
+    String redirectToOriginalUrl(@PathVariable String shortKey) {
+        Optional<ShortUrlDto> shortUrlDtoOptional = shortUrlService.accessShortUrl(shortKey);
+        if(shortUrlDtoOptional.isEmpty()) {
+            throw new ShortUrlNotFoundException("Invalid short key:" + shortKey);
+        }
+        ShortUrlDto shortUrlDto = shortUrlDtoOptional.get();
+        return "redirect:"+shortUrlDto.originalUrl();
     }
 }
