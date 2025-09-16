@@ -2,6 +2,7 @@ package com.lucasterra.spring_boot_url_shortener.web.controllers;
 
 import com.lucasterra.spring_boot_url_shortener.ApplicationProperties;
 import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
+import com.lucasterra.spring_boot_url_shortener.domain.entities.User;
 import com.lucasterra.spring_boot_url_shortener.domain.exceptions.ShortUrlNotFoundException;
 import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
@@ -26,14 +27,17 @@ public class HomeController {
 
     private final ShortUrlService shortUrlService;
     private final ApplicationProperties properties;
+    private final SecurityUtils securityUtils;
 
-    public HomeController(ShortUrlService shortUrlService, ApplicationProperties properties) {
+    public HomeController(ShortUrlService shortUrlService, ApplicationProperties properties, SecurityUtils securityUtils) {
         this.shortUrlService = shortUrlService;
         this.properties = properties;
+        this.securityUtils = securityUtils;
     }
 
     @GetMapping("/")
     public String home(Model model) {
+        User currentUser = securityUtils.getCurrentUser();
         List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
         model.addAttribute("shortUrls", shortUrls);
         model.addAttribute("baseUrl", "http://localhost:8080");
@@ -72,5 +76,10 @@ public class HomeController {
         }
         ShortUrlDto shortUrlDto = shortUrlDtoOptional.get();
         return "redirect:"+shortUrlDto.originalUrl();
+    }
+
+    @GetMapping("/login")
+    String loginForm() {
+        return "login";
     }
 }
