@@ -1,10 +1,10 @@
 package com.lucasterra.spring_boot_url_shortener.web.controllers;
 
 import com.lucasterra.spring_boot_url_shortener.ApplicationProperties;
-import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
 import com.lucasterra.spring_boot_url_shortener.domain.entities.User;
 import com.lucasterra.spring_boot_url_shortener.domain.exceptions.ShortUrlNotFoundException;
 import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
+import com.lucasterra.spring_boot_url_shortener.domain.models.PagedResult;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
 import com.lucasterra.spring_boot_url_shortener.domain.service.ShortUrlService;
 import com.lucasterra.spring_boot_url_shortener.web.dtos.CreateShortUrlForm;
@@ -12,13 +12,9 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.naming.Binding;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,13 +32,18 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Model model) {
-        User currentUser = securityUtils.getCurrentUser();
-        List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
-        model.addAttribute("shortUrls", shortUrls);
-        model.addAttribute("baseUrl", "http://localhost:8080");
+    public String home(
+            @RequestParam(defaultValue = "1") Integer page,
+            Model model) {
+        addShortUrlsDataToModel(model, page);
         model.addAttribute("createShortUrlForm", new CreateShortUrlForm("", false, null));
         return "index";
+    }
+
+    private void addShortUrlsDataToModel(Model model, int pageNumber) {
+        PagedResult<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls(pageNumber, properties.pageSize());
+        model.addAttribute("shortUrls", shortUrls);
+        model.addAttribute("baseUrl", properties.baseUrl());
     }
 
     @PostMapping("/short-urls")
@@ -51,9 +52,7 @@ public class HomeController {
                           RedirectAttributes redirectAttributes,
                           Model model) {
         if(bindingResult.hasErrors()) {
-            List<ShortUrlDto> shortUrls = shortUrlService.findAllPublicShortUrls();
-            model.addAttribute("shortUrls", shortUrls);
-            model.addAttribute("baseUrl", properties.baseUrl());
+            addShortUrlsDataToModel(model, 1);
             return "index";
         }
 

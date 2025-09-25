@@ -3,9 +3,14 @@ package com.lucasterra.spring_boot_url_shortener.domain.service;
 import com.lucasterra.spring_boot_url_shortener.ApplicationProperties;
 import com.lucasterra.spring_boot_url_shortener.domain.entities.ShortUrl;
 import com.lucasterra.spring_boot_url_shortener.domain.models.CreateShortUrlCmd;
+import com.lucasterra.spring_boot_url_shortener.domain.models.PagedResult;
 import com.lucasterra.spring_boot_url_shortener.domain.models.ShortUrlDto;
 import com.lucasterra.spring_boot_url_shortener.domain.repositories.ShortUrlRepository;
 import com.lucasterra.spring_boot_url_shortener.domain.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,9 +38,13 @@ public class ShortUrlService {
         this.userRepository = userRepository;
     }
 
-    public List<ShortUrlDto> findAllPublicShortUrls() {
-        return shortUrlRepository.findPublicShortUrls()
-                .stream().map(entityMapper::toShortUrlDto).toList();
+    public PagedResult<ShortUrlDto> findAllPublicShortUrls(int pageNumber, int pageSize) {
+        pageNumber = pageNumber > 1? pageNumber - 1 : 0;
+        Pageable pageable = PageRequest.of(pageNumber,pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<ShortUrlDto> shortUrlDtoPage = shortUrlRepository.findPublicShortUrls(pageable)
+                .map(entityMapper::toShortUrlDto);
+        return PagedResult.from(shortUrlDtoPage);
+
     }
 
     @Transactional
