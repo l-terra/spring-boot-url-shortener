@@ -3,7 +3,7 @@ package com.lucasterra.spring_boot_url_shortener.domain.entities;
 import com.lucasterra.spring_boot_url_shortener.domain.models.Role;
 import jakarta.persistence.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -23,7 +23,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
     public Long getId() {
         return Id;
@@ -65,11 +65,11 @@ public class User {
         this.role = role;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
 }
