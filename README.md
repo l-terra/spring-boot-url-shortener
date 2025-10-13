@@ -53,7 +53,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 1.  **Clone the repository:**
 
     ```bash
-    git clone https://github.com/lucasterra/spring-boot-url-shortener.git
+    git clone https://github.com/l-terra/spring-boot-url-shortener.git
     cd spring-boot-url-shortener
     ```
 
@@ -62,7 +62,8 @@ Follow these instructions to get a copy of the project up and running on your lo
     Navigate to the `docker` directory and run the following command:
 
     ```bash
-    docker-compose up -d
+    cd docker
+    docker-compose up -d postgres
     ```
 
     This will start a PostgreSQL container and expose it on port `5432`.
@@ -79,12 +80,10 @@ Follow these instructions to get a copy of the project up and running on your lo
     app.default-expiry-in-days=30
     app.validate-original-url=true
 
-
+    # Postgres config
     spring.datasource.url=jdbc:postgresql://localhost:5432/postgres
     spring.datasource.username=postgres
     spring.datasource.password=postgres
-    spring.jpa.show-sql=true
-    spring.jpa.open-in-view=false
     ```
 
 4.  **Run the application:**
@@ -144,6 +143,8 @@ You can also build a Docker image for the application and run it using Docker Co
 
 1.  **Build the application JAR:**
 
+    With the PostgreSQL container already started, run the following command:
+
     ```bash
     ./mvnw clean package
     ```
@@ -165,7 +166,7 @@ You can also build a Docker image for the application and run it using Docker Co
     docker-compose up -d
     ```
 
-    This will start both the PostgreSQL database and the Spring Boot application containers.
+    This will start both the PostgreSQL database and the Spring Boot application containers. The application will be accessible at `http://localhost:8080`.
 
 ## Contributing
 
