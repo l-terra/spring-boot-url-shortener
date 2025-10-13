@@ -73,16 +73,21 @@ public class ShortUrlService {
 
     @Transactional
     public ShortUrlDto createShortUrl(CreateShortUrlCmd cmd) {
+        String normalizedUrl = normalizeUrl(cmd.originalUrl());
+
         if(properties.validateOriginalUrl()) {
-            boolean urlExists = UrlExistenceValidator.CheckIfUrlExists(cmd.originalUrl());
+            boolean urlExists = UrlExistenceValidator.CheckIfUrlExists(normalizedUrl);
             if(!urlExists) {
-                throw new RuntimeException("URL is invalid: " + cmd.originalUrl());
+                throw new RuntimeException("URL is invalid: " + normalizedUrl);
             }
         }
+
         var shortKey = generateUniqueShortKey();
         var shortUrl = new ShortUrl();
-        shortUrl.setOriginalUrl(cmd.originalUrl());
+
+        shortUrl.setOriginalUrl(normalizedUrl);
         shortUrl.setShortKey(shortKey);
+
         if(cmd.userId() == null) {
             shortUrl.setCreatedBy(null);
             shortUrl.setPrivate(false);
@@ -93,10 +98,26 @@ public class ShortUrlService {
             shortUrl.setPrivate(cmd.isPrivate() != null && cmd.isPrivate());
             shortUrl.setExpiresAt(cmd.expirationInDays() != null ? Instant.now().plus(cmd.expirationInDays(), DAYS) : null);
         }
+
         shortUrl.setClickCount(0L);
         shortUrl.setCreatedAt(Instant.now());
         shortUrlRepository.save(shortUrl);
+
         return entityMapper.toShortUrlDto(shortUrl);
+    }
+
+    private String normalizeUrl(String url) {
+        if(url == null || url.trim().isEmpty()) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
+
+        // Regex para checar se a URL já começa com http:// ou https:// (case-insensitive)
+        if (!url.matches("^(?i)https?://.*")) {
+            // Se não começar, adiciona https:// como padrão
+            return "https://" + url;
+        }
+
+        return url;
     }
 
     private String generateUniqueShortKey() {
@@ -129,7 +150,9 @@ public class ShortUrlService {
         if(shortUrl.getExpiresAt() != null && shortUrl.getExpiresAt().isBefore(Instant.now())) {
             return Optional.empty();
         }
-        if(shortUrl.getPrivate() != null && shortUrl.getCreatedBy() != null
+        if(shortUrl.getPrivate() != null
+                && shortUrl.getPrivate()
+                && shortUrl.getCreatedBy() != null
                 && !Objects.equals(shortUrl.getCreatedBy().getId(), userId)) {
             return Optional.empty();
         }
